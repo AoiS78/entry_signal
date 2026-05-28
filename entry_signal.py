@@ -1,6 +1,17 @@
+```python
 import streamlit as st
 import yfinance as yf
 import pandas as pd
+import matplotlib.pyplot as plt
+
+# -----------------------------
+# ページ設定
+# -----------------------------
+st.set_page_config(
+    page_title="Entry Signal",
+    page_icon="📈",
+    layout="centered"
+)
 
 # -----------------------------
 # RSI計算関数
@@ -20,17 +31,28 @@ def calculate_rsi(series, period=14):
 
     return rsi
 
+# -----------------------------
+# タイトル
+# -----------------------------
+st.title("📈 Entry Signal")
+
+st.caption("中長期投資向け エントリー判定アプリ")
 
 # -----------------------------
-# Streamlit UI
+# 入力
 # -----------------------------
-st.title("エントリー判定")
+ticker = st.text_input(
+    "ティッカーを入力してください",
+    "AAPL"
+)
 
-ticker = st.text_input("ティッカーを入力してください", "AAPL")
-
+# -----------------------------
+# 判定ボタン
+# -----------------------------
 if st.button("判定する"):
 
     try:
+
         # -----------------------------
         # データ取得
         # -----------------------------
@@ -82,10 +104,6 @@ if st.button("判定する"):
 
         # -----------------------------
         # BUY / WAIT 判定
-        # MUST:
-        # ①②がYES
-        # 補助:
-        # ③④⑤のうち2つ以上YES
         # -----------------------------
         support_count = sum([cond3, cond4, cond5])
 
@@ -100,32 +118,82 @@ if st.button("判定する"):
         company_name = stock.info.get("shortName", ticker)
 
         # -----------------------------
-        # 表示
+        # 上部表示
         # -----------------------------
-        st.subheader(f"銘柄名: {company_name}")
+        st.subheader(f"{company_name}")
 
-        st.write(f"現在株価: {price:.2f}")
+        # BUY / WAIT を上に表示
+        if final_result == "BUY":
+            st.success("🟢 BUY")
+        else:
+            st.warning("🟡 WAIT")
+
+        st.write(f"現在株価: ${price:.2f}")
 
         st.write("---")
 
+        # -----------------------------
+        # 条件一覧
+        # -----------------------------
+        st.subheader("Conditions")
+
         st.write(f"① 【Must】Price > MA200 : {'✅' if cond1 else '❌'}")
+
         st.write(f"② 【Must】MA50 > MA200 : {'✅' if cond2 else '❌'}")
-        st.write(f"③ 3か月上昇率 < 20% : {'✅' if cond3 else '❌'}")
-        st.write(f"④ MA50乖離 ±10% : {'✅' if cond4 else '❌'}")
+
+        st.write(f"③ 3-Month Growth < 20% : {'✅' if cond3 else '❌'}")
+
+        st.write(f"④ MA50 Gap ±10% : {'✅' if cond4 else '❌'}")
+
         st.write(f"⑤ RSI < 55 : {'✅' if cond5 else '❌'}")
 
         st.write("---")
 
-        st.write(f"3か月上昇率: {growth_3m:.2f}%")
-        st.write(f"MA50乖離率: {ma50_gap:.2f}%")
+        # -----------------------------
+        # 数値詳細
+        # -----------------------------
+        st.subheader("Metrics")
+
+        st.write(f"3-Month Growth: {growth_3m:.2f}%")
+
+        st.write(f"MA50 Gap: {ma50_gap:.2f}%")
+
         st.write(f"RSI: {rsi:.2f}")
 
         st.write("---")
 
-        if final_result == "BUY":
-            st.success("判定: BUY")
-        else:
-            st.warning("判定: WAIT")
+        # -----------------------------
+        # チャート
+        # -----------------------------
+        st.subheader("1 Year Chart")
+
+        fig, ax = plt.subplots(figsize=(10, 4))
+
+        ax.plot(
+            df.index,
+            df["Close"],
+            label="Close"
+        )
+
+        ax.plot(
+            df.index,
+            df["MA50"],
+            label="MA50"
+        )
+
+        ax.plot(
+            df.index,
+            df["MA200"],
+            label="MA200"
+        )
+
+        ax.set_xlabel("Date")
+        ax.set_ylabel("Price")
+
+        ax.legend()
+
+        st.pyplot(fig)
 
     except Exception as e:
         st.error(f"エラーが発生しました: {e}")
+```
