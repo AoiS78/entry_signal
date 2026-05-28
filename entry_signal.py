@@ -195,4 +195,3 @@ if st.button("判定する"):
 
     except Exception as e:
         st.error(f"エラーが発生しました: {e}")
-```
