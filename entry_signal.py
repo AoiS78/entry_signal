@@ -1,4 +1,3 @@
-```python id="f5d9r8"
 import streamlit as st
 import yfinance as yf
 import pandas as pd
